@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Beverage Sales — 2023 Performance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --ink:#0B132B;        /* carbonated indigo */
+  --ink2:#1C2541;
+  --panel:#FFFFFF;
+  --fog:#F2F4F8;
+  --line:#E2E6EF;
+  --mut:#5B6680;
+  --gold:#E9A93D;       /* fizzy amber */
+  --gold-d:#C8861E;
+  --teal:#2A9D8F;
+  --red:#D1495B;
+  --txt:#0B132B;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--fog);color:var(--txt);line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+
+/* header */
+header{background:linear-gradient(160deg,var(--ink) 0%,var(--ink2) 100%);color:#fff;padding:38px 0 30px;position:relative;overflow:hidden}
+header::after{content:"";position:absolute;right:-60px;top:-40px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(233,169,61,.22),transparent 65%)}
+.eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
+header h1{font-size:30px;font-weight:800;margin-top:8px;letter-spacing:-.02em}
+header p{color:#AEB6CC;margin-top:6px;font-size:14px;max-width:620px}
+
+section{padding:34px 0}
+.sec-label{display:flex;align-items:baseline;gap:12px;margin-bottom:18px}
+.sec-label .num{font-size:12px;font-weight:700;color:var(--gold-d);letter-spacing:.1em}
+.sec-label h2{font-size:18px;font-weight:700;letter-spacing:-.01em}
+.sec-label .hint{font-size:13px;color:var(--mut);margin-left:auto}
+
+/* KPI cards */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;position:relative}
+.kpi .lab{font-size:12.5px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.kpi .val{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.kpi .sub{font-size:12.5px;color:var(--mut);margin-top:3px}
+.kpi.accent{background:linear-gradient(160deg,#13203f,#0B132B);color:#fff}
+.kpi.accent .lab{color:var(--gold)}
+.kpi.accent .sub{color:#9aa5c2}
+.kpi .tick{position:absolute;top:20px;right:22px;width:8px;height:8px;border-radius:50%;background:var(--gold)}
+
+.grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.card h3{font-size:15px;font-weight:700;margin-bottom:2px}
+.card .csub{font-size:12.5px;color:var(--mut);margin-bottom:16px}
+.chartbox{position:relative;height:300px}
+.chartbox.sm{height:260px}
+
+/* product lists */
+.twocol{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.plist{list-style:none}
+.plist li{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.plist li:last-child{border-bottom:none}
+.rank{width:22px;height:22px;flex:none;border-radius:6px;background:var(--fog);color:var(--mut);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.pname{font-weight:600}
+.pcat{font-size:11.5px;color:var(--mut)}
+.pval{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+.pos{color:var(--teal)} .neg{color:var(--red)}
+.win .rank{background:rgba(42,157,143,.13);color:var(--teal)}
+.loss .rank{background:rgba(209,73,91,.13);color:var(--red)}
+
+/* sales table */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:right;padding:11px 10px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);font-weight:700}
+tbody tr:hover{background:var(--fog)}
+td .store{font-size:11.5px;color:var(--mut)}
+.bar-cell{position:relative}
+.minibar{height:6px;border-radius:4px;background:var(--gold);margin-top:4px}
+
+.note{background:#FFF8EC;border:1px solid #F0D9A8;border-radius:10px;padding:14px 16px;font-size:13px;color:#7A5B16;margin-top:14px}
+.note b{color:#5e4410}
+
+footer{padding:30px 0 50px;color:var(--mut);font-size:12.5px;text-align:center}
+
+@media(max-width:860px){
+ .kpis{grid-template-columns:repeat(2,1fr)}
+ .grid2{grid-template-columns:1fr}
+ .twocol{grid-template-columns:1fr}
+}
+@media(max-width:520px){.kpis{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Beverage Retail · Full Year 2023</div>
+    <h1>Sales Performance Dashboard</h1>
+    <p>20,000 orders across 10 stores and 100 products. Profit, growth, target tracking, and people — read top to bottom.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- KPIs -->
+<section>
+  <div class="sec-label"><span class="num">01</span><h2>The headline numbers</h2><span class="hint">whole year, all stores</span></div>
+  <div class="kpis" id="kpis"></div>
+</section>
+
+<!-- Growth -->
+<section>
+  <div class="sec-label"><span class="num">02</span><h2>Growth trend</h2><span class="hint">month by month</span></div>
+  <div class="grid2">
+    <div class="card">
+      <h3>Revenue &amp; net profit by month</h3>
+      <div class="csub">Revenue bars (left), net profit line — watch the gap between them, that's cost.</div>
+      <div class="chartbox"><canvas id="trend"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>Orders by month</h3>
+      <div class="csub">How busy each month was.</div>
+      <div class="chartbox"><canvas id="orders"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<!-- Category -->
+<section>
+  <div class="sec-label"><span class="num">03</span><h2>Profit by category</h2><span class="hint">where the profit comes from</span></div>
+  <div class="card">
+    <h3>Net profit contribution by category</h3>
+    <div class="csub">Soft drinks lead; juice trails. Each bar is total net profit for that category.</div>
+    <div class="chartbox"><canvas id="cat"></canvas></div>
+  </div>
+</section>
+
+<!-- Products -->
+<section>
+  <div class="sec-label"><span class="num">04</span><h2>Best &amp; worst products</h2><span class="hint">by net profit</span></div>
+  <div class="twocol">
+    <div class="card">
+      <h3>Top 10 — most profitable</h3>
+      <div class="csub">These earn the most after cost.</div>
+      <ul class="plist win" id="top"></ul>
+    </div>
+    <div class="card">
+      <h3>Bottom 10 — losing money</h3>
+      <div class="csub">These sell below cost — every one is a negative.</div>
+      <ul class="plist loss" id="bottom"></ul>
+    </div>
+  </div>
+</section>
+
+<!-- Salespeople -->
+<section>
+  <div class="sec-label"><span class="num">05</span><h2>Salesperson performance</h2><span class="hint">units, sales value &amp; profit</span></div>
+  <div class="card">
+    <h3>All 10 salespeople, ranked by net profit</h3>
+    <div class="csub">Units = products sold · Sales value = money taken · Net profit = what's left after cost.</div>
+    <table>
+      <thead><tr><th>Salesperson</th><th>Units sold</th><th>Sales value</th><th>Net profit</th></tr></thead>
+      <tbody id="sales"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer></footer>
+</div>
+
+<script>
+const D = {"net_profit": 2110478.99, "orders": 20000, "qty": 606148, "returns": 48662, "revenue": 5008511.96, "return_rate": 8.03, "trend": [{"m": "Jan", "rev": 408217.0, "profit": 163117.0, "orders": 1694}, {"m": "Feb", "rev": 390666.0, "profit": 163652.0, "orders": 1539}, {"m": "Mar", "rev": 429851.0, "profit": 187711.0, "orders": 1724}, {"m": "Apr", "rev": 412565.0, "profit": 177678.0, "orders": 1635}, {"m": "May", "rev": 442174.0, "profit": 188905.0, "orders": 1732}, {"m": "Jun", "rev": 418601.0, "profit": 179301.0, "orders": 1620}, {"m": "Jul", "rev": 399014.0, "profit": 167755.0, "orders": 1638}, {"m": "Aug", "rev": 447112.0, "profit": 191726.0, "orders": 1763}, {"m": "Sep", "rev": 406996.0, "profit": 174498.0, "orders": 1623}, {"m": "Oct", "rev": 421596.0, "profit": 174724.0, "orders": 1703}, {"m": "Nov", "rev": 425932.0, "profit": 176935.0, "orders": 1684}, {"m": "Dec", "rev": 405789.0, "profit": 164479.0, "orders": 1645}], "target_overall": 33.1, "target_total": 5254990.0, "target_actual": 1739346.0, "top": [{"n": "Begin Brew", "p": 87116.0, "c": "Water"}, {"n": "Common Splash", "p": 77456.0, "c": "Soft Drink"}, {"n": "Onto Dew", "p": 76661.0, "c": "Tea"}, {"n": "Eight Brew", "p": 76481.0, "c": "Tea"}, {"n": "Attorney Mist", "p": 72260.0, "c": "Sports Drink"}, {"n": "Two Breeze", "p": 68023.0, "c": "Soft Drink"}, {"n": "Tv Breeze", "p": 67906.0, "c": "Sports Drink"}, {"n": "Method Mist", "p": 58708.0, "c": "Tea"}, {"n": "Return Mist", "p": 58094.0, "c": "Soft Drink"}, {"n": "Relate Mist", "p": 53906.0, "c": "Coffee"}], "bottom": [{"n": "Somebody Fusion", "p": -46650.0, "c": "Coffee"}, {"n": "Threat Mist", "p": -36221.0, "c": "Water"}, {"n": "Center Mist", "p": -26881.0, "c": "Juice"}, {"n": "Sometimes Dew", "p": -23299.0, "c": "Alcoholic Beverage"}, {"n": "Its Dew", "p": -20039.0, "c": "Water"}, {"n": "Nice Mist", "p": -17440.0, "c": "Soft Drink"}, {"n": "Race Rush", "p": -15038.0, "c": "Sports Drink"}, {"n": "Debate Rush", "p": -13050.0, "c": "Energy Drink"}, {"n": "Large Fusion", "p": -12673.0, "c": "Juice"}, {"n": "Bar Drop", "p": -9236.0, "c": "Coffee"}], "sales": [{"n": "Crystal Franco", "store": "Myers-Lopez", "money": 519374.0, "units": 63107, "profit": 224081.0}, {"n": "Christopher Cameron", "store": "Valdez", "money": 512879.0, "units": 62162, "profit": 214484.0}, {"n": "Dustin Manning", "store": "Novak PLC", "money": 492768.0, "units": 58572, "profit": 213351.0}, {"n": "Anthony Lee", "store": "Miller", "money": 503346.0, "units": 61126, "profit": 213260.0}, {"n": "William Gonzalez", "store": "Barron-Fleming", "money": 502905.0, "units": 60147, "profit": 213120.0}, {"n": "Kelsey Zimmerman", "store": "Lee-Myers", "money": 504136.0, "units": 62408, "profit": 210005.0}, {"n": "Kelsey Beard", "store": "Lopez", "money": 502387.0, "units": 61163, "profit": 209749.0}, {"n": "Kimberly Mcdonald", "store": "Thomas", "money": 494036.0, "units": 59576, "profit": 205952.0}, {"n": "Seth Adams", "store": "Berg-Trujillo", "money": 482857.0, "units": 58161, "profit": 203972.0}, {"n": "Tammy Monroe", "store": "Martinez", "money": 493823.0, "units": 59726, "profit": 202505.0}], "gender": [{"g": "Female", "profit": 1023486.0, "qty": 294604}, {"g": "Male", "profit": 1086993.0, "qty": 311544}], "cat": [{"c": "Soft Drink", "p": 660682.0}, {"c": "Sports Drink", "p": 383841.0}, {"c": "Tea", "p": 337446.0}, {"c": "Water", "p": 310976.0}, {"c": "Energy Drink", "p": 159899.0}, {"c": "Coffee", "p": 130510.0}, {"c": "Alcoholic Beverage", "p": 79155.0}, {"c": "Juice", "p": 47970.0}]};
+const fmt = n => n.toLocaleString('en-US');
+const money = n => '$'+Math.round(n).toLocaleString('en-US');
+const moneyK = n => '$'+(n/1000).toFixed(0)+'k';
+const C = {ink:'#0B132B',gold:'#E9A93D',goldD:'#C8861E',teal:'#2A9D8F',red:'#D1495B',mut:'#5B6680',line:'#E2E6EF'};
+
+/* KPIs */
+const kpis=[
+ {lab:'Net profit',val:money(D.net_profit),sub:'after all product cost',accent:true},
+ {lab:'Total revenue',val:money(D.revenue),sub:'gross sales value'},
+ {lab:'Total orders',val:fmt(D.orders),sub:'transactions placed'},
+ {lab:'Products sold',val:fmt(D.qty),sub:'total units'},
+ {lab:'Units returned',val:fmt(D.returns),sub:D.return_rate+'% return rate'},
+];
+document.getElementById('kpis').innerHTML=kpis.map(k=>`
+ <div class="kpi ${k.accent?'accent':''}">
+   ${k.accent?'<span class="tick"></span>':''}
+   <div class="lab">${k.lab}</div>
+   <div class="val">${k.val}</div>
+   <div class="sub">${k.sub}</div>
+ </div>`).join('');
+
+Chart.defaults.font.family="Inter,system-ui,sans-serif";
+Chart.defaults.color=C.mut;Chart.defaults.font.size=12;
+
+/* trend */
+new Chart(document.getElementById('trend'),{
+ data:{labels:D.trend.map(t=>t.m),
+  datasets:[
+   {type:'bar',label:'Revenue',data:D.trend.map(t=>t.rev),backgroundColor:'rgba(11,19,43,.10)',borderColor:C.ink,borderWidth:0,borderRadius:5,yAxisID:'y',order:2},
+   {type:'line',label:'Net profit',data:D.trend.map(t=>t.profit),borderColor:C.gold,backgroundColor:C.gold,borderWidth:2.5,tension:.35,pointRadius:3,pointBackgroundColor:C.gold,yAxisID:'y',order:1}
+  ]},
+ options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+  plugins:{legend:{position:'bottom',labels:{boxWidth:10,usePointStyle:true,padding:16}},
+   tooltip:{callbacks:{label:c=>c.dataset.label+': '+money(c.raw)}}},
+  scales:{y:{beginAtZero:true,grid:{color:C.line},ticks:{callback:v=>moneyK(v)}},x:{grid:{display:false}}}}
+});
+
+/* orders */
+new Chart(document.getElementById('orders'),{
+ type:'bar',
+ data:{labels:D.trend.map(t=>t.m),datasets:[{data:D.trend.map(t=>t.orders),backgroundColor:C.teal,borderRadius:5}]},
+ options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmt(c.raw)+' orders'}}},
+  scales:{y:{beginAtZero:true,grid:{color:C.line}},x:{grid:{display:false}}}}
+});
+
+/* category */
+new Chart(document.getElementById('cat'),{
+ type:'bar',
+ data:{labels:D.cat.map(c=>c.c),datasets:[{data:D.cat.map(c=>c.p),backgroundColor:C.gold,borderRadius:5}]},
+ options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.raw)}}},
+  scales:{x:{beginAtZero:true,grid:{color:C.line},ticks:{callback:v=>moneyK(v)}},y:{grid:{display:false}}}}
+});
+
+/* product lists */
+const pli=(arr,cls)=>arr.map((p,i)=>`<li>
+  <span class="rank">${i+1}</span>
+  <span><span class="pname">${p.n}</span><br><span class="pcat">${p.c}</span></span>
+  <span class="pval ${p.p>=0?'pos':'neg'}">${p.p<0?'-$'+fmt(Math.abs(p.p)):'$'+fmt(p.p)}</span>
+ </li>`).join('');
+document.getElementById('top').innerHTML=pli(D.top);
+document.getElementById('bottom').innerHTML=pli(D.bottom);
+
+/* sales table */
+const maxProfit=Math.max(...D.sales.map(s=>s.profit));
+document.getElementById('sales').innerHTML=D.sales.map(s=>`<tr>
+  <td><b>${s.n}</b><br><span class="store">${s.store}</span></td>
+  <td>${fmt(s.units)}</td>
+  <td>${money(s.money)}</td>
+  <td class="bar-cell"><b>${money(s.profit)}</b><div class="minibar" style="width:${(s.profit/maxProfit*100).toFixed(0)}%"></div></td>
+ </tr>`).join('');
+</script>
+</body>
+</html>
